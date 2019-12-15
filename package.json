@@ -1,0 +1,17 @@
+{
+  "name": "mpop-service",
+  "version": "0.1.0",
+  "description": "Service pour le stockage des données pour MPOP",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexandre Quessy",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "http": "0.0.0",
+    "socket.io": "^2.3.0"
+  }
+}

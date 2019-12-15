@@ -1,0 +1,40 @@
+version: "3.3"
+services:
+  app:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgres://postgres@postgres:5432/mpop
+      NODE_ENV: development
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    command: npm start
+    volumes:
+      - .:/app/
+      - /app/node_modules
+
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: mpop
+    
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8188:8080
+      
+  flyway:
+    image: boxfuse/flyway
+    command: -url=jdbc:postgresql://mpop -schemas=myschema -user=root -password='' -connectRetries=60 migrate
+    volumes:
+      - ./flyway/sql:/flyway/sql
+    depends_on:
+      - postgres
+
