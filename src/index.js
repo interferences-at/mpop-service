@@ -5,10 +5,22 @@ const http = require('http');
 const jsonRpcTwo = require('./jsonRpcTwo');
 
 // Constants
+const HTTP_PORT = 18187;
 const WEBSOCKET_PORT = 18189;
+const PACKAGE_VERSION = 'FIXME';
 
 // Global objects
 const expressServer = express();
+const listener = expressServer.listen(HTTP_PORT, function(){
+    console.log('Listening on port ' + listener.address().port);
+});
+expressServer.get('/', function(req, res){
+  res.send({
+    working: true,
+    version: PACKAGE_VERSION
+  });
+});
+
 const httpServer = http.createServer(expressServer);
 const websocketServer = socketio(httpServer, {
   path: '/rpc',
