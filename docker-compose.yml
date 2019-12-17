@@ -29,19 +29,22 @@ services:
     #     restart: always
   
   app:
-    image: "node:13"
+    # image: "node:13"
+    build: .
     user: "node"
-    working_dir: /home/node/app
+    # working_dir: /home/node/app
     environment:
       - NODE_ENV=${MPOP_NODE_ENV}
       - PORT=${MPOP_NODE_PORT}
     volumes:
       - ./:/home/node/app
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     expose:
       - "3000"
       - "18187"
       - "18189"
-    command: "npm start"
+        # command:
+        # - wait-for-it.sh db:3306 -- npm start
     depends_on:
       - db
     restart: always
@@ -53,7 +56,7 @@ services:
       - MYSQL_DATABASE=${MPOP_MYSQL_DATABASE}
       - MYSQL_USER=${MPOP_MYSQL_USER}
       - MYSQL_PASSWORD=${MPOP_MYSQL_PASSWORD}
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
     volumes:
       - mysql_data_volume:/var/lib/mysql
     #   - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
