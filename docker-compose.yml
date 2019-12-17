@@ -1,42 +1,91 @@
-version: "3.3"
+# docker-compose YAML configuration file for mpop-service
+# Launches a MySQL database, Flyway for its migration scripts, adminer as a GUI
+# for MySQL, and launches the mpop-service application.
+#
+# Usage:
+# `docker-compose up`
+#
+# To reset the image files:
+# `docker-compose rm`
+version: "3.4"
+# See .env for the environment variables used in this file.
 services:
+    #   app:
+    #     build: .
+    #     environment:
+    #       DATABASE_URL: mysql://${MPOP_MYSQL_USER}:MPOP_MYSQL_PASSWORD@localhost:3306/${MPOP_MYSQL_DATABASE}
+    #       NODE_ENV: ${MPOP_NODE_ENV}
+    #       PORT: ${MPOP_NODE_PORT}
+    #     ports:
+    #       - "${MPOP_NODE_PORT}:${MPOP_NODE_PORT}"
+    #       - "18187:18187"
+    #       - "18189:18189"
+    #     command: npm start
+    #     volumes:
+    #       - .:/app/
+    #       - /app/node_modules
+    #     depends_on:
+    #       - db
+    #     restart: always
+  
   app:
-    build: .
+    image: "node:13"
+    user: "node"
+    working_dir: /home/node/app
     environment:
-      DATABASE_URL: mysql://root:pw@localhost:3306/db
-      NODE_ENV: development
-      PORT: 3000
-    ports:
-      - "3000:3000"
-      - "18187:18187"
-      - "18189:18189"
-    command: npm start
+      - NODE_ENV=${MPOP_NODE_ENV}
+      - PORT=${MPOP_NODE_PORT}
     volumes:
-      - .:/app/
-      - /app/node_modules
+      - ./:/home/node/app
+    expose:
+      - "3000"
+      - "18187"
+      - "18189"
+    command: "npm start"
     depends_on:
       - db
+    restart: always
+
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MPOP_MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MPOP_MYSQL_DATABASE}
+      - MYSQL_USER=${MPOP_MYSQL_USER}
+      - MYSQL_PASSWORD=${MPOP_MYSQL_PASSWORD}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data_volume:/var/lib/mysql
+    #   - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+    restart: always
+    ports:
+      - 3306:3306
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3306"]
+      interval: 10s
+      start_period: 10s
+      timeout: 10s
+      retries: 5
     
   adminer:
     image: adminer
     restart: always
     ports:
-      - 8188:8080
+      - ${MPOP_ADMINER_PORT}:8080
 
   flyway:
-    image: flyway/flyway
-    command: -url=jdbc:mysql://db -schemas=myschema -user=root -password=pw -connectRetries=60 migrate
+    image: dhoer/flyway:alpine
+    command: -url=jdbc:mysql://${MPOP_MYSQL_DATABASE} -schemas=myschema -user=root -password=${MPOP_MYSQL_PASSWORD} migrate
     volumes:
       - .:/flyway/sql
     depends_on:
       - db
+    restart: on-failure
 
-  db:
-    image: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=pw
-      - MYSQL_DATABASE=db
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    ports:
-      - 3306:3306
+volumes:
+  # Compose will automatically create this named volume, and you will be able
+  # to see it with the `docker volume ls` command as well as find its path with
+  # `docker volume inspect <volume_name>`.
+  mysql_data_volume:
+
 

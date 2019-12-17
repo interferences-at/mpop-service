@@ -3,6 +3,16 @@ const express = require('express');
 const socketio = require('socket.io')
 const http = require('http');
 const jsonRpcTwo = require('./jsonRpcTwo');
+const database = require('./database');
+
+let databaseConnection = undefined;
+try {
+  databaseConnection = database.getConnection();
+} catch (err) {
+  console.log("Error connecting to the database.");
+  console.error(err);
+  process.exit(1);
+}
 
 // Constants
 const HTTP_PORT = 18187;
@@ -12,7 +22,7 @@ const PACKAGE_VERSION = 'FIXME';
 // Global objects
 const expressServer = express();
 const listener = expressServer.listen(HTTP_PORT, function(){
-    console.log('Listening on port ' + listener.address().port);
+    console.log('Listening express on port ' + listener.address().port);
 });
 expressServer.get('/', function(req, res){
   res.send({
@@ -27,7 +37,7 @@ const websocketServer = socketio(httpServer, {
 });
 
 httpServer.listen(WEBSOCKET_PORT, function() {
-  console.log('Listening on port ' + WEBSOCKET_PORT);
+  console.log('Listening websocket on port ' + WEBSOCKET_PORT);
 
   websocketServer.on('connection', function(socket) {
     console.log('A user connected');
